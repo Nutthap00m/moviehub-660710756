@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import MovieGrid from '../components/MovieGrid';
-import { getMovies, CACHE_KEY } from '../api/tmdb';
-import { forget } from '../api/cache';
+import { getMovies } from '../api/backend';
+//import { forget } from '../api/cache';
 //import { movies as localMovies } from '../data/data';
 // TODO ขั้นที่ 3: import { useEffect } from 'react' และ import { getMovies, CACHE_KEY } from '../api/tmdb' กับ { forget } from '../api/cache'
 
@@ -22,27 +22,29 @@ function Movies() {
   // const error = null;
 
   useEffect(() => {
-    let ignore = false;                            // ธงกันคำตอบเก่ามาทับคำตอบใหม่
+  let isMounted = true;
+  setStatus('loading');
+  setError(null);
 
-    async function load() {
-      setStatus('loading');
-      try {
-        const list = await getMovies();            // ครั้งแรกของวันยิง API ครั้งถัดไปอ่านจาก localStorage
-        if (!ignore) {
-          setMovies(list);
-          setStatus('success');
-        }
-      } catch (err) {
-        if (!ignore) {
-          setError(err);
-          setStatus('error');
-        }
+  // สมมติว่ามีฟังก์ชัน getMovies() หรือการดึงข้อมูลจาก API / Cache
+  getMovies()
+    .then((data) => {
+      if (isMounted) {
+        setMovies(data);
+        setStatus('success');
       }
-    }
-    load();
+    })
+    .catch((err) => {
+      if (isMounted) {
+        setError(err);
+        setStatus('error');
+      }
+    });
 
-    return () => { ignore = true; };               // cleanup: effect รอบเก่าถูกยกเลิก
-  }, [reloadKey]);
+  return () => {
+    isMounted = false;
+  };
+}, [reloadKey]);
 
   // ค่าที่คำนวณจาก state ไม่ต้องเป็น state เอง: รายชื่อแนวที่มีจริง และรายการหลังกรอง
   const genres = [...new Set(movies.map(m => m.genre).filter(Boolean))];
@@ -79,7 +81,7 @@ function Movies() {
       </div>
 
       <MovieGrid movies={shown} status={status} error={error}
-                 onRetry={() => { forget(CACHE_KEY); setReloadKey(k => k + 1); }} />
+                 onRetry={() => { setReloadKey(k => k + 1); }} />
     </div>
   );
 }
