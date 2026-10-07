@@ -11,7 +11,7 @@ function ReviewForm({ movieTitle, onSubmit }) {
     return <p className="rounded-lg bg-emerald-50 p-4 text-emerald-700">ขอบคุณสำหรับรีวิว {movieTitle} 🎉</p>;
   }
 
-  async function handleSubmit(e) {
+   async function handleSubmit(e) {
     e.preventDefault();
     setStatus('submitting');
     setError(null);

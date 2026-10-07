@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
+
 // TODO ขั้นที่ 2: import { useNavigate } from 'react-router-dom' และ import { useAuth } from '../auth/AuthContext'
 
 function Login() {
@@ -10,12 +11,12 @@ function Login() {
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('typing');             // 'typing' | 'submitting'
   // TODO ขั้นที่ 2: const { login } = useAuth();  และ  const navigate = useNavigate();
-  const {login} = useAuth();
-  const navigate = useNavigate(); 
   const location = useLocation();
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const from = location.state?.from || '/';                   // ProtectedRoute ส่งมาบอกว่าเดิมจะไปไหน
 
-    async function handleSubmit(e) {
+   async function handleSubmit(e) {
     e.preventDefault();
     setStatus('submitting');
     setError(null);

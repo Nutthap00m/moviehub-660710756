@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import MovieGrid from '../components/MovieGrid';
 import { getMovies } from '../api/backend';
 //import { forget } from '../api/cache';
-//import { movies as localMovies } from '../data/data';
 // TODO ขั้นที่ 3: import { useEffect } from 'react' และ import { getMovies, CACHE_KEY } from '../api/tmdb' กับ { forget } from '../api/cache'
 
 function Movies() {
@@ -11,40 +10,31 @@ function Movies() {
   const [movies, setMovies] = useState([]);        // รายการจาก getMovies() (โหลดจริงวันละครั้ง)
   const [status, setStatus] = useState('loading'); // 'loading' | 'success' | 'error'
   const [error, setError] = useState(null);
-  const [reloadKey, setReloadKey] = useState(0);
-  // TODO ขั้นที่ 3: เปลี่ยน 3 ค่าคงที่ด้านล่างให้เป็น state แล้วโหลดจาก API ด้วย useEffect
-  //   movies   เริ่มจาก []  (รายการที่ได้จาก getMovies() ซึ่งโหลดจริงวันละครั้ง)
-  //   status   'loading' | 'success' | 'error'
-  //   error    Error หรือ null
-  //   และ reloadKey (ตัวนับ) สำหรับปุ่ม "ลองใหม่" ที่ต้อง forget(CACHE_KEY) ก่อนโหลดซ้ำ
-  // const movies = localMovies;
-  // const status = 'success';
-  // const error = null;
+  const [reloadKey, setReloadKey] = useState(0);   // ตัวนับสำหรับปุ่ม "ลองใหม่"
 
   useEffect(() => {
-  let isMounted = true;
-  setStatus('loading');
-  setError(null);
+    let ignore = false;                            // ธงกันคำตอบเก่ามาทับคำตอบใหม่
 
-  // สมมติว่ามีฟังก์ชัน getMovies() หรือการดึงข้อมูลจาก API / Cache
-  getMovies()
-    .then((data) => {
-      if (isMounted) {
-        setMovies(data);
-        setStatus('success');
+    async function load() {
+      setStatus('loading');
+      try {
+        const list = await getMovies();            // ครั้งแรกของวันยิง API ครั้งถัดไปอ่านจาก localStorage
+        if (!ignore) {
+          setMovies(list);
+          setStatus('success');
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(err);
+          setStatus('error');
+        }
       }
-    })
-    .catch((err) => {
-      if (isMounted) {
-        setError(err);
-        setStatus('error');
-      }
-    });
+    }
+    load();
 
-  return () => {
-    isMounted = false;
-  };
-}, [reloadKey]);
+    return () => { ignore = true; };               // cleanup: effect รอบเก่าถูกยกเลิก
+  }, [reloadKey]);
+
 
   // ค่าที่คำนวณจาก state ไม่ต้องเป็น state เอง: รายชื่อแนวที่มีจริง และรายการหลังกรอง
   const genres = [...new Set(movies.map(m => m.genre).filter(Boolean))];
@@ -64,7 +54,7 @@ function Movies() {
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">หนังทั้งหมด</h1>
           <p className="text-sm text-slate-500">
-            แหล่งข้อมูล: data.js {status === 'success' && `| พบ ${shown.length} จาก ${movies.length} เรื่อง`}
+            แหล่งข้อมูล: TMDB (โหลดวันละครั้ง) {status === 'success' && `| พบ ${shown.length} จาก ${movies.length} เรื่อง`}
           </p>
         </div>
         <input value={query} onChange={(e) => setQuery(e.target.value)}
@@ -81,7 +71,7 @@ function Movies() {
       </div>
 
       <MovieGrid movies={shown} status={status} error={error}
-                 onRetry={() => { setReloadKey(k => k + 1); }} />
+                 onRetry={() =>   setReloadKey(k => k + 1)} />
     </div>
   );
 }

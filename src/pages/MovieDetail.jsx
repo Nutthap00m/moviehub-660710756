@@ -14,8 +14,8 @@ function MovieDetail() {
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
   const [reviews, setReviews] = useState([]);       // รีวิวจาก backend ของเรา (ไม่ใช่ TMDB)
-  const { isLoggedIn } = useAuth(); 
-  const {member,token} = useAuth();                // TODO ขั้นที่ 3: ดึง token และ member มาด้วย
+  const { isLoggedIn } = useAuth();                 // TODO ขั้นที่ 3: ดึง token และ member มาด้วย
+  const { token, member } = useAuth();
 
   useEffect(() => {
     let ignore = false;
@@ -35,8 +35,7 @@ function MovieDetail() {
   // TODO ขั้นที่ 3 (ก): เปลี่ยน effect นี้ให้โหลดรีวิวจริงจาก backend
   //   getReviews(id) ได้ { items } แล้ว setReviews(items)  dependency คือ [id] เหมือนตัวบน
   //   (แยกจาก effect ของ TMDB เพราะคนละ server พังคนละแบบ ไม่ควรให้รีวิวล่มแล้วหน้าทั้งหน้าพัง)
-    // โหลดรีวิวของเรื่องนี้จาก backend ของเรา แยก effect จาก TMDB เพราะคนละ server
-  useEffect(() => {
+useEffect(() => {
     let ignore = false;
     getReviews(id)
       .then(data => { if (!ignore) setReviews(data.items); })
